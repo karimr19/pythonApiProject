@@ -204,6 +204,7 @@ def check_order(order, regions, courier_hours_minutes_list, match_orders, courie
         order_time_intervals = list(map(str, order['delivery_hours'].split()))
         # Преобразуем интервалы заказов.
         order_hours_minutes_list = help_functions.time_list(order_time_intervals)
+        is_normal = False
         # Проходимся по списку интервалов курьера.
         for i in range(0, len(courier_hours_minutes_list), 2):
             # Считываем часы и минуты начала и конца работы курьера.
@@ -220,17 +221,19 @@ def check_order(order, regions, courier_hours_minutes_list, match_orders, courie
                 order_right_hour = order_hours_minutes_list[j + 1][0]
                 order_right_min = order_hours_minutes_list[j + 1][1]
                 # Проверяем подходят ли часы доставки графику работы.
-                if ((left_hour < order_left_hour < order_right_hour < right_hour) or
-                   (left_hour <= order_left_hour < order_right_hour < right_hour and left_min <= order_left_min) or
-                   (left_hour < order_left_hour < order_right_hour <= right_hour and right_min >= order_right_min) or
-                   (left_hour <= order_left_hour < order_right_hour <= right_hour and left_min <= order_left_min and
-                   right_min >= order_right_min)):
+                if ((left_hour == right_hour == order_left_hour == order_right_hour and
+                     (left_min < order_left_min < right_min or order_left_min < left_min < order_right_min or
+                      left_min == order_left_min or order_right_min == right_min)) or
+                        left_hour <= order_left_hour <= right_hour or order_left_hour <= left_hour <= order_right_hour):
                     match_orders.append({'id': order['order_id']})
                     update_order_executor(courier_info_dict, courier_type, order)
                     was_added = True
+                    is_normal = True
                     break
                 if was_added:
                     break
+            if is_normal:
+                break
 
 
 # Проверяет, подходит ли заказ под параметры курьера.
@@ -259,11 +262,10 @@ def normal_order(order, regions, max_weight, courier_hours_minutes_list):
                 order_right_hour = order_hours_minutes_list[j + 1][0]
                 order_right_min = order_hours_minutes_list[j + 1][1]
                 # Проверяем подходит ли время доставки под график курьера и если подходит, меняем значения флагов.
-                if ((left_hour < order_left_hour < order_right_hour < right_hour) or
-                   (left_hour <= order_left_hour < order_right_hour < right_hour and left_min <= order_left_min) or
-                   (left_hour < order_left_hour < order_right_hour <= right_hour and right_min >= order_right_min) or
-                   (left_hour <= order_left_hour < order_right_hour <= right_hour and left_min <= order_left_min and
-                   right_min >= order_right_min)):
+                if ((left_hour == right_hour == order_left_hour == order_right_hour and
+                     (left_min < order_left_min < right_min or order_left_min < left_min < order_right_min or
+                      left_min == order_left_min or order_right_min == right_min)) or
+                        left_hour <= order_left_hour <= right_hour or order_left_hour <= left_hour <= order_right_hour):
                     was_added = True
                     is_matching = True
                     break

@@ -23,7 +23,8 @@ def add_couriers():
         # Валидируем ключи словаря курьера.
         if ('courier_id' in dicts_list[i] and 'courier_type' in dicts_list[i] and
                 'regions' in dicts_list[i] and 'working_hours' in dicts_list[i] and
-                len(dicts_list[i]) == 4 and not DB.courier_exists(dicts_list[i]['courier_id'])):
+                len(dicts_list[i]) == 4 and not DB.courier_exists(dicts_list[i]['courier_id']) and
+                help_functions.validate_courier_input_type(dicts_list[i])):
             # Добавляем полученные данные.
             entities_list.append((dicts_list[i]['courier_id'], dicts_list[i]['courier_type'],
                                   help_functions.list_to_string(dicts_list[i]['regions']),
@@ -53,7 +54,8 @@ def add_couriers():
 def edit_courier(courier_id):
     input_json = request.json
     # Проверяем существование курьера с заданным id и наличие ключей в теле запроса.
-    if not DB.courier_exists(courier_id) or len(input_json) == 0:
+    if not DB.courier_exists(courier_id) or len(input_json) == 0 or \
+            not(help_functions.validate_courier_edit(input_json)):
         return make_response("<h2>HTTP 400 Bad Request</h2>", 400)
     # Проходимся по всем ключам словаря и проверяем что они соответствуют ключам таблицы.
     for key in input_json:
@@ -98,7 +100,8 @@ def add_orders():
         # Проверяем корректность ключей и значений.
         if ('order_id' in dicts_list[i] and 'weight' in dicts_list[i] and
                 'region' in dicts_list[i] and 'delivery_hours' in dicts_list[i] and len(dicts_list[i]) == 4 and
-                0.01 <= dicts_list[i]['weight'] <= 50 and not DB.order_exists(dicts_list[i]['order_id'])):
+                0.01 <= dicts_list[i]['weight'] <= 50 and not DB.order_exists(dicts_list[i]['order_id']) and
+                help_functions.validate_order_input_type(dicts_list[i])):
             entities_list.append((dicts_list[i]['order_id'], dicts_list[i]['weight'], dicts_list[i]['region'],
                                   help_functions.list_to_string(dicts_list[i]['delivery_hours'])))
         else:
@@ -175,7 +178,7 @@ def give_courier_info(courier_id):
 def assign_courier():
     input_json = request.json
     # Проверяем корректность id курьера.
-    if not('courier_id' in input_json and len(input_json) == 1) or not DB.courier_exists(input_json['courier_id']):
+    if not ('courier_id' in input_json and len(input_json) == 1) or not DB.courier_exists(input_json['courier_id']):
         return make_response('<h2>HTTP 400 Bad Request</h2>', 400)
     # Читаем информацию о курьере.
     courier_info_dict = DB.courier_info(input_json['courier_id'])
